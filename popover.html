@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+		<title>
+			Scrobble Anywhere
+		</title>
+		<link href="popover.css" media="all" rel="stylesheet" type="text/css" />
+		<link href="spinner.css" media="all" rel="stylesheet" type="text/css" />
+	</head>
+	
+<script type="text/javascript">
+	const Global = safari.extension.globalPage.contentWindow;
+	
+	function login() {
+		Global.authenticate(function() {
+			if(safari.extension.settings.sessionKey) {
+				document.getElementsByTagName("body")[0].className = "scrobbler";
+			}
+		});
+	}
+	
+	function scrobble() {
+		if(!safari.extension.settings.sessionKey) {
+			document.getElementsByTagName("body")[0].className = "login";
+			return;
+		}
+		
+		document.getElementById("scrobble").removeEventListener("click", scrobble, true);
+		document.getElementById("track-info").removeEventListener("submit", scrobble, true);
+		
+		document.getElementById("scrobble").className = "button big disabled";
+		document.getElementById("scrobble-text").innerHTML = "Scrobbling...";
+		
+		var artist = document.getElementById("artist").value;
+		var track = document.getElementById("track").value;
+		
+		Global.Scrobbler.scrobble(artist, track, function(result) {
+			if(result.scrobbles) {
+				var scrobble = result.scrobbles.scrobble;
+				var corrected = (scrobble.artist.corrected === "1") || (scrobble.track.corrected === "1");
+				showPopup((corrected ? "Corrected to" : "Scrobbled") + " <strong>" + scrobble.artist["#text"] + " - " +  scrobble.track["#text"] + "</strong>");
+			}
+			else if(result.message) {
+				showPopup("<strong>Error:</strong> " + result.message);
+			}
+			else {
+				showPopup("<strong>Error</strong>");
+			}
+			
+			document.getElementById("scrobble").className = "button big";
+			document.getElementById("scrobble-text").innerHTML = "Scrobble";
+			
+			document.getElementById("scrobble").addEventListener("click", scrobble, true);
+			document.getElementById("track-info").addEventListener("submit", scrobble, true);
+		});
+	}
+	
+	function showPopup(value, timeout) {
+		var popup = document.getElementById("popup");
+		popup.innerHTML = value;
+		popup.style.display = "block";
+		popup.className = "active";
+		
+		if(timeout) {
+			setTimeout(hidePopup, timeout);
+		}
+		else {
+			setTimeout(hidePopup, 3000);
+		}
+	}
+	function hidePopup() {
+		var popup = document.getElementById("popup");
+		popup.className = "";
+		var oldHTML = popup.innerHTML;
+		setTimeout(function() {
+			if(popup.innerHTML === oldHTML) {
+				popup.style.display = "none";
+				popup.innerHTML = "";
+			}
+		}, 600);
+	}
+	
+	function reset() {
+		Global.console.log(safari.extension.settings);
+		safari.extension.settings.sessionKey = undefined;
+		safari.extension.settings.username = undefined;
+		Global.console.log(safari.extension.settings);
+	}
+</script>
+
+<body class="login">
+	<header>
+		<h1>
+			Scrobble Anywhere
+		</h1>
+	</header>
+
+	<div id="login-container">
+		<p class="instructions">
+			Opens Last.fm in a new window. Once you have authorized Scrobble Anywhere to access your account, close the window to finish setup.
+		</p>
+		<a class="button big" id="login">Login</a>
+	</div>
+
+	<div id="scrobbler-container">
+		<form id="track-info" action="popover.html">
+			<input id="artist" type="text" onfocus="test" placeholder="Artist" />
+			<input id="track" type="text" placeholder="Track" />
+		</form>
+		<a class="button big" id="scrobble">
+			<span id="scrobble-text">Scrobble</span>
+			<div class="spinner">
+				<div class="bar1"></div>
+				<div class="bar2"></div>
+				<div class="bar3"></div>
+				<div class="bar4"></div>
+				<div class="bar5"></div>
+				<div class="bar6"></div>
+				<div class="bar7"></div>
+				<div class="bar8"></div>
+				<div class="bar9"></div>
+				<div class="bar10"></div>
+				<div class="bar11"></div>
+				<div class="bar12"></div>
+			</div>
+		</a>
+	</div>
+	
+	<div id="popup" style="display: none;"></div>
+</body>
+
+<script type="text/javascript">
+	if(safari.extension.settings.sessionKey) {
+		document.getElementsByTagName("body")[0].className = "scrobbler";
+	}
+	
+	safari.extension.settings.addEventListener("change", function(event) {
+		if(event.key === "sessionKey") {
+			document.getElementsByTagName("body")[0].className = "login";
+		}
+	}, false);
+	
+	
+	document.getElementById("login").addEventListener("click", login, true);
+	
+	document.getElementById("scrobble").addEventListener("click", scrobble, true);
+	document.getElementById("track-info").addEventListener("submit", scrobble, true);
+	
+	document.getElementById("popup").addEventListener("click", hidePopup, true);
+</script>
+
+</html>

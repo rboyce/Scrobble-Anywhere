@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+
+<script type="text/javascript" src="md5.js"></script>
+<script type="text/javascript" src="zepto.min.js"></script>
+<script type="text/javascript" src="scrobbler.js"></script>
+
+<script type="text/javascript">
+function authenticate(callback) {
+	Scrobbler.getToken(function(result) {
+		console.log(result);
+		var token = result.token;
+
+		var authWindow = safari.application.openBrowserWindow();
+		authWindow.tabs[0].url = "http://www.last.fm/api/auth/?api_key="+Scrobbler.apiKey+"&token="+token;
+		
+		// fetch a session key after authentication
+		authWindow.tabs[0].addEventListener("close", function() {
+			Scrobbler.getSession(token, function(result) {
+				console.log(result);
+				safari.extension.settings.username = result.session.name;
+				safari.extension.settings.sessionKey = result.session.key;
+				
+				if(typeof callback === "function") {
+					callback();
+				}
+			});
+		}, false);
+	});
+}
+
+safari.extension.settings.addEventListener("change", function(event) {
+	if(event.key === "username") {
+		safari.extension.settings.sessionKey = null;
+		safari.extension.settings.username = null;
+	}
+}, false);
+
+</script>
+
+</html>
