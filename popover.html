@@ -20,15 +20,15 @@
 		});
 	}
 	
-	function scrobble() {
+	var scrobble = function() {
 		if(!safari.extension.settings.sessionKey) {
 			document.getElementsByTagName("body")[0].className = "login";
 			return;
 		}
+			
+		Global.console.log('scrobbling');
 		
-		document.getElementById("scrobble").removeEventListener("click", scrobble, true);
-		document.getElementById("track-info").removeEventListener("submit", scrobble, true);
-		
+		disableScrobbling();
 		document.getElementById("scrobble").className = "button big disabled";
 		document.getElementById("scrobble-text").innerHTML = "Scrobbling...";
 		
@@ -47,13 +47,22 @@
 			else {
 				showPopup("<strong>Error</strong>");
 			}
-			
+	
 			document.getElementById("scrobble").className = "button big";
 			document.getElementById("scrobble-text").innerHTML = "Scrobble";
+			setupScrobbling();
 			
-			document.getElementById("scrobble").addEventListener("click", scrobble, true);
-			document.getElementById("track-info").addEventListener("submit", scrobble, true);
+			Global.console.log('scrobbled');
 		});
+	}
+	
+	function setupScrobbling() {
+		document.getElementById("scrobble").addEventListener("click", scrobble, true);
+		document.getElementById("track-info").addEventListener("submit", scrobble, true);
+	}
+	function disableScrobbling() {
+		document.getElementById("scrobble").removeEventListener("click", scrobble, true);
+		document.getElementById("track-info").removeEventListener("submit", scrobble, true);
 	}
 	
 	function showPopup(value, timeout) {
@@ -144,8 +153,7 @@
 	
 	document.getElementById("login").addEventListener("click", login, true);
 	
-	document.getElementById("scrobble").addEventListener("click", scrobble, true);
-	document.getElementById("track-info").addEventListener("submit", scrobble, true);
+	setupScrobbling();
 	
 	document.getElementById("popup").addEventListener("click", hidePopup, true);
 </script>
