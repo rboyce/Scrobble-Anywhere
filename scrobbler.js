@@ -51,7 +51,7 @@ Scrobbler = {
 			method: "track.scrobble",
 			artist: artist,
 			track: track,
-			sk: safari.extension.settings.sessionKey
+			sk: settings.sessionKey
 		};
 		
 		Scrobbler.makeRequest(params, callback);

@@ -10,18 +10,36 @@
 	</head>
 	
 <script type="text/javascript">
-	const Global = safari.extension.globalPage.contentWindow;
+	var Global, unsupportedBrowser; 
+	if(window.safari !== undefined) {
+		console.log('safari detected');
+		Global = safari.extension.globalPage.contentWindow;
+		safari.extension.settings.addEventListener("change", function(event) {
+			if(event.key === "sessionKey") {
+				document.getElementsByTagName("body")[0].className = "login";
+			}
+		}, false);
+	
+	}
+	else if(window.chrome !== undefined) {
+		console.log('chrome detected');
+		Global = chrome.extension.getBackgroundPage();
+	}
+	else {
+		console.log('unsupported browser detected');
+		unsupportedBrowser = true;
+	}
 	
 	function login() {
 		Global.authenticate(function() {
-			if(safari.extension.settings.sessionKey) {
+			if(Global.settings.sessionKey) {
 				document.getElementsByTagName("body")[0].className = "scrobbler";
 			}
 		});
 	}
 	
 	var scrobble = function() {
-		if(!safari.extension.settings.sessionKey) {
+		if(!Global.settings.sessionKey) {
 			document.getElementsByTagName("body")[0].className = "login";
 			return;
 		}
@@ -91,10 +109,10 @@
 	}
 	
 	function reset() {
-		Global.console.log(safari.extension.settings);
-		safari.extension.settings.sessionKey = undefined;
-		safari.extension.settings.username = undefined;
-		Global.console.log(safari.extension.settings);
+		Global.console.log(Global.settings);
+		Global.settings.sessionKey = undefined;
+		Global.settings.username = undefined;
+		Global.console.log(Global.settings);
 	}
 </script>
 
@@ -117,7 +135,7 @@
 			<input id="artist" type="text" onfocus="test" placeholder="Artist" />
 			<input id="track" type="text" placeholder="Track" />
 		</form>
-		<a class="button big" id="scrobble">
+		<a href="http://last.fm" class="button big" id="scrobble">
 			<span id="scrobble-text">Scrobble</span>
 			<div class="spinner">
 				<div class="bar1"></div>
@@ -140,16 +158,13 @@
 </body>
 
 <script type="text/javascript">
-	if(safari.extension.settings.sessionKey) {
+	if(unsupportedBrowser) {
+		document.getElementById("login").innerHTML = '<p class="instructions">Sorry, Scrobble Anywhere only supports Chrome and Safari.</p>';
+	}
+
+	if(Global.settings.sessionKey) {
 		document.getElementsByTagName("body")[0].className = "scrobbler";
 	}
-	
-	safari.extension.settings.addEventListener("change", function(event) {
-		if(event.key === "sessionKey") {
-			document.getElementsByTagName("body")[0].className = "login";
-		}
-	}, false);
-	
 	
 	document.getElementById("login").addEventListener("click", login, true);
 	

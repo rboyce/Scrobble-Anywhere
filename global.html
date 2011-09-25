@@ -2,40 +2,70 @@
 <html>
 
 <script type="text/javascript" src="md5.js"></script>
-<script type="text/javascript" src="zepto.min.js"></script>
-<script type="text/javascript" src="scrobbler.js"></script>
 
 <script type="text/javascript">
+var settings, openAuthWindow, unsupportedBrowser;
+// Safari-specific
+if(window.safari !== undefined) {
+	console.log('safari detected');
+	settings = safari.extension.settings;
+	openAuthWindow = function(token, callback) {
+		var authWindow = safari.application.openBrowserWindow();
+		authWindow.tabs[0].url = "http://www.last.fm/api/auth/?api_key="+Scrobbler.apiKey+"&token="+token;
+		
+		// fetch a session key after authentication
+		authWindow.tabs[0].addEventListener("close", callback, false);
+	};
+	
+	// check for settings change
+	safari.extension.settings.addEventListener("change", function(event) {
+		if(event.key === "username") {
+			safari.extension.settings.sessionKey = null;
+			safari.extension.settings.username = null;
+		}
+	}, false);
+}
+// Chrome-specific
+else if(window.chrome !== undefined) {
+	console.log('chrome detected');
+	settings = localStorage;
+	openAuthWindow = function(token, callback) {
+		chrome.tabs.create({
+			url: "http://www.last.fm/api/auth/?api_key="+Scrobbler.apiKey+"&token="+token
+		}, function(tab) {
+			chrome.tabs.onRemoved.addListener(function(closedTabId) {
+				if(tab.id === closedTabId) {
+					callback();
+				}
+			});
+		});
+	};
+}
+else {
+	console.log('unsupported browser detected');
+	unsupportedBrowser = true;
+}
+
 function authenticate(callback) {
 	Scrobbler.getToken(function(result) {
 		console.log(result);
 		var token = result.token;
 
-		var authWindow = safari.application.openBrowserWindow();
-		authWindow.tabs[0].url = "http://www.last.fm/api/auth/?api_key="+Scrobbler.apiKey+"&token="+token;
-		
-		// fetch a session key after authentication
-		authWindow.tabs[0].addEventListener("close", function() {
+		openAuthWindow(token, function() {
 			Scrobbler.getSession(token, function(result) {
 				console.log(result);
-				safari.extension.settings.username = result.session.name;
-				safari.extension.settings.sessionKey = result.session.key;
+				settings.username = result.session.name;
+				settings.sessionKey = result.session.key;
 				
 				if(typeof callback === "function") {
 					callback();
 				}
 			});
-		}, false);
+		});
 	});
 }
-
-safari.extension.settings.addEventListener("change", function(event) {
-	if(event.key === "username") {
-		safari.extension.settings.sessionKey = null;
-		safari.extension.settings.username = null;
-	}
-}, false);
-
 </script>
+
+<script type="text/javascript" src="scrobbler.js"></script>
 
 </html>

@@ -1,0 +1,20 @@
+{
+	"name": "Scrobble Anywhere",
+	"version": "1.0.1",
+	"description": "Record any song to Last.fm from your Chrome toolbar.",
+	"homepage_url": "http://rboyce.com/scrobbleanywhere/",
+	"icons": {
+		"16": "icon16.png",
+		"48": "icon48.png",
+		"128": "icon128.png"
+	},
+	
+	"background_page": "global.html",
+	"browser_action": {
+		"default_icon": "Icon19.png",
+		"popup": "popover.html"
+	},
+	"permissions": [
+		"http://ws.audioscrobbler.com"
+	]
+}
