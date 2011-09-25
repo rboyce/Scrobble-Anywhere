@@ -50,6 +50,8 @@ header {
 	color: rgba(0,0,0,.6);
 	border-radius: 4px;
 	box-shadow: 0 0 2px rgba(230,230,230,1);
+	-webkit-user-drag: none;
+	user-drag: none;
 }
 .button:active {
 	box-shadow: 0 0 1px rgba(230,230,230,.9), inset 1px 1px 5px rgba(64,64,64,.25);
